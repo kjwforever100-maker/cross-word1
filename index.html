@@ -291,7 +291,7 @@
 <body>
 <header>
   <div>
-    <div class="title">가로세로 퍼즐</div>
+    <div class="title">2단계 보안해제</div>
     <div class="meta" id="meta">정답 0 / 10 · 노란칸 0 / 5</div>
   </div>
   <button class="btn secondary" id="resetBtn" title="처음부터 다시">리셋</button>
@@ -301,7 +301,7 @@
   <div class="boardWrap">
     <div class="board" id="board" aria-label="퍼즐판"></div>
     <div class="small">
-      · 검정 = 배경칸 · 흰색 = 정답칸 · (2문제마다) 랜덤 노란칸 공개
+      · 흰색 = 정답칸 · 2문제 정답마다 랜덤 노란칸 공개
     </div>
       </div>
 
@@ -384,9 +384,9 @@ const PUZZLE = {
     {id:"down3",  dir:"down",  label:"세로3", number:3,  clue:"십계명 중 가장 마지막 계명. 네 이웃의 집을 OOO OO (출애굽기 20:17)", answer:"탐내지말라", start:{x:1,y:1}},
     {id:"across4",dir:"across",label:"가로4", number:4,  clue:"구약 성경의 가장 마지막 권 이름은?", answer:"말라기", start:{x:1,y:4}},
     {id:"across5",dir:"across",label:"가로5", number:5,  clue:"아브라함의 아내. 이삭이 어머니 (창세기 17:19)", answer:"사라", start:{x:0,y:5}},
-    {id:"down6",  dir:"down",  label:"세로6", number:6,  clue:"힘들어도 포기하지 않고 끝까지 싸우는 마음. 우리는 마귀와 OOOO 싸워야 해요", answer:"사생결단", start:{x:0,y:5}},
+    {id:"down6",  dir:"down",  label:"세로6", number:6,  clue:"죽고 사는 것을 생각치 않고 모든 힘을 다해 결판을 낸다 뜻의 고사성어. O생O단", answer:"사생결단", start:{x:0,y:5}},
     {id:"across7",dir:"across",label:"가로7", number:7,  clue:"우리 하나님은 우리를 위하여 OOO 반석에서 물이 나오게 하셔요! (신명기 8:15)", answer:"단단한", start:{x:0,y:8}},
-    {id:"down8",  dir:"down",  label:"세로8", number:8,  clue:"아침해가 뜨기전 하나님께 드리는 기도에요", answer:"새벽기도", start:{x:3,y:2}},
+    {id:"down8",  dir:"down",  label:"세로8", number:8,  clue:"아침해가 뜨기전 하나님께 드리는 기도에요 (마가복음 1:35)", answer:"새벽기도", start:{x:3,y:2}},
     {id:"across9",dir:"across",label:"가로9", number:9,  clue:"하나님께 로그인 할때 우리에게 새 영과 OOO을 주세요 (에스겔 36:26)", answer:"새마음", start:{x:3,y:2}},
     {id:"down10", dir:"down",  label:"세로10",number:10, clue:"우리 예수님은 OO을 이기시고 부활 하셨어요!", answer:"죽음", start:{x:5,y:1}},
   ],
