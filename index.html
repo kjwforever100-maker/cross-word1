@@ -1,0 +1,674 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>가로세로 퍼즐</title>
+  <style>
+    :root{
+      --cell: 48px;
+      --gap: 2px;
+      --border: #111;
+      --bg: #0b0b0b;
+      --white: #fff;
+      --black: #000;
+      --yellow: #ffe96a;
+      --text: #111;
+      --muted: #666;
+      --ok: #0a7a1f;
+      --bad: #b00020;
+    }
+    body{
+      margin:0;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, "Noto Sans KR", Arial, sans-serif;
+      background: #f5f6f8;
+      color:#111;
+    }
+    header{
+      padding: 14px 16px;
+      background: white;
+      border-bottom: 1px solid #e6e8ee;
+      display:flex;
+      align-items:center;
+      gap: 10px;
+      justify-content: space-between;
+    }
+    header .title{
+      font-weight: 700;
+      font-size: 16px;
+      line-height: 1.2;
+    }
+    header .meta{
+      font-size: 13px;
+      color: var(--muted);
+    }
+    main{
+      display:grid;
+      grid-template-columns: 1fr;
+      gap: 12px;
+      padding: 12px;
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+    @media (min-width: 860px){
+      main{
+        grid-template-columns: auto 1fr;
+        align-items:start;
+      }
+    }
+    .boardWrap{
+      background: white;
+      border: 1px solid #e6e8ee;
+      border-radius: 14px;
+      padding: 12px;
+      box-shadow: 0 1px 8px rgba(20,20,30,.06);
+      width: fit-content;
+      max-width: 100%;
+      overflow:auto;
+    }
+    .board{
+      display:grid;
+      grid-template-columns: repeat(6, var(--cell));
+      grid-template-rows: repeat(9, var(--cell));
+      gap: var(--gap);
+      background: var(--border);
+      padding: var(--gap);
+      border-radius: 10px;
+      user-select:none;
+      touch-action: manipulation;
+    }
+    .cell{
+      position:relative;
+      background: var(--white);
+      border-radius: 6px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      font-weight: 800;
+      font-size: 18px;
+      color: var(--text);
+    }
+    .cell.block{
+      background: var(--black);
+    }
+    .cell.revealedSpecial{
+      background: var(--yellow);
+    }
+    .cell .num{
+      position:absolute;
+      top: 4px;
+      left: 6px;
+      font-size: 10px;
+      font-weight: 700;
+      color: rgba(0,0,0,.55);
+    }
+    .cell.block .num{ color: rgba(255,255,255,.45); }
+    .cell .ch{
+      font-size: 20px;
+      letter-spacing: 1px;
+    }
+    .cell.locked .ch{
+      color:#111;
+    }
+    .panel{
+      background:white;
+      border: 1px solid #e6e8ee;
+      border-radius: 14px;
+      padding: 12px;
+      box-shadow: 0 1px 8px rgba(20,20,30,.06);
+    }
+    .tabs{
+      display:flex;
+      gap:8px;
+      margin-bottom:10px;
+      flex-wrap:wrap;
+    }
+    .tabBtn{
+      border:1px solid #dde1ea;
+      background:#fafbff;
+      padding:8px 10px;
+      border-radius: 999px;
+      font-weight:700;
+      font-size: 13px;
+      cursor:pointer;
+    }
+    .tabBtn.active{
+      background:#111;
+      color:#fff;
+      border-color:#111;
+    }
+    .clueList{
+      display:grid;
+      gap: 8px;
+    }
+    .clueBtn{
+      text-align:left;
+      border:1px solid #e6e8ee;
+      background:#fff;
+      padding:10px 10px;
+      border-radius: 12px;
+      cursor:pointer;
+      display:flex;
+      gap:10px;
+      align-items:flex-start;
+      justify-content: space-between;
+    }
+    .clueBtn:hover{ background:#fafafa; }
+    .clueBtn .left{
+      display:flex;
+      gap:10px;
+      align-items:flex-start;
+    }
+    .badge{
+      min-width: 58px;
+      text-align:center;
+      padding:4px 8px;
+      border-radius: 999px;
+      font-weight: 900;
+      font-size: 12px;
+      background:#f0f2f7;
+      color:#111;
+    }
+    .clueBtn.solved .badge{
+      background: rgba(10,122,31,.12);
+      color: var(--ok);
+    }
+    .clueText{
+      font-size: 14px;
+      line-height: 1.35;
+    }
+    .small{
+      font-size: 12px;
+      color: var(--muted);
+      margin-top: 8px;
+    }
+
+    /* Modal */
+    .modalBackdrop{
+      position:fixed; inset:0;
+      background: rgba(0,0,0,.45);
+      display:none;
+      align-items:center;
+      justify-content:center;
+      padding: 16px;
+      z-index: 50;
+    }
+    .modalBackdrop.open{ display:flex; }
+    .modal{
+      width:min(520px, 100%);
+      background:#fff;
+      border-radius: 16px;
+      border: 1px solid #e6e8ee;
+      box-shadow: 0 12px 40px rgba(0,0,0,.22);
+      overflow:hidden;
+    }
+    .modal header{
+      border-bottom: 1px solid #eef0f5;
+      background:#fff;
+      padding: 12px 14px;
+    }
+    .modal header .title{
+      font-size: 15px;
+    }
+    .modal .body{
+      padding: 14px;
+      display:grid;
+      gap: 10px;
+    }
+    .modal .clue{
+      font-size: 14px;
+      line-height: 1.5;
+    }
+    .modal .inputRow{
+      display:flex;
+      gap: 8px;
+      align-items:center;
+      flex-wrap:wrap;
+    }
+    input[type="text"]{
+      flex: 1 1 220px;
+      padding: 10px 12px;
+      border-radius: 12px;
+      border: 1px solid #dfe3ec;
+      font-size: 16px;
+      outline:none;
+    }
+    input[type="text"]:focus{
+      border-color:#111;
+      box-shadow: 0 0 0 3px rgba(17,17,17,.08);
+    }
+    .btn{
+      padding: 10px 12px;
+      border-radius: 12px;
+      border: 1px solid #111;
+      background:#111;
+      color:#fff;
+      font-weight: 900;
+      cursor:pointer;
+      font-size: 14px;
+    }
+    .btn.secondary{
+      background:#fff;
+      color:#111;
+      border-color:#dde1ea;
+    }
+    .toast{
+      position:fixed;
+      left:50%;
+      transform: translateX(-50%);
+      bottom: 18px;
+      background:#111;
+      color:#fff;
+      padding: 10px 12px;
+      border-radius: 999px;
+      font-size: 13px;
+      font-weight: 800;
+      display:none;
+      z-index: 60;
+      box-shadow: 0 10px 24px rgba(0,0,0,.25);
+      max-width: calc(100% - 24px);
+      text-align:center;
+    }
+    .toast.show{ display:block; }
+    .toast.ok{ background: var(--ok); }
+    .toast.bad{ background: var(--bad); }
+    .messageBox{
+      margin-top: 10px;
+      padding: 10px 12px;
+      border-radius: 12px;
+      background:#f6f7fb;
+      border:1px dashed #d7dbea;
+      font-weight: 900;
+      letter-spacing: 1px;
+    }
+  </style>
+</head>
+<body>
+<header>
+  <div>
+    <div class="title">가로세로 퍼즐</div>
+    <div class="meta" id="meta">정답 0 / 10 · 노란칸 0 / 5</div>
+  </div>
+  <button class="btn secondary" id="resetBtn" title="처음부터 다시">리셋</button>
+</header>
+
+<main>
+  <div class="boardWrap">
+    <div class="board" id="board" aria-label="퍼즐판"></div>
+    <div class="small">
+      · 검정 = 배경칸 · 흰색 = 정답칸 · (2문제마다) 랜덤 노란칸 공개
+    </div>
+      </div>
+
+  <div class="panel">
+    <div class="tabs">
+      <button class="tabBtn active" data-tab="across">가로</button>
+      <button class="tabBtn" data-tab="down">세로</button>
+    </div>
+    <div class="clueList" id="clueList"></div>
+    <div class="small">
+      · 문항을 눌러 정답을 입력하세요. 맞으면 칸이 채워지고 잠깁니다.
+    </div>
+  </div>
+</main>
+
+<!-- Modal -->
+<div class="modalBackdrop" id="modalBackdrop" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+  <div class="modal">
+    <header>
+      <div class="title" id="modalTitle">문항</div>
+      <div class="meta" id="modalMeta"></div>
+    </header>
+    <div class="body">
+      <div class="clue" id="modalClue"></div>
+      <div class="inputRow">
+        <input type="text" id="answerInput" placeholder="정답 입력" autocomplete="off" />
+        <button class="btn" id="checkBtn">확인</button>
+        <button class="btn secondary" id="closeBtn">닫기</button>
+      </div>
+      <div class="small" id="hintSmall">※ 띄어쓰기는 무시하고 채점합니다.</div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/**
+ * 퍼즐 데이터 (6 x 9)
+ * 좌표: x 0..5 (왼→오), y 0..8 (위→아래)
+ */
+const PUZZLE = {
+  width: 6,
+  height: 9,
+  // block cells as "x,y"
+  blocks: new Set([
+    "1,0","2,0","3,0","4,0","5,0",
+    "3,1","4,1",
+    "0,2","2,2",
+    "0,3","2,3","4,3","5,3",
+    "0,4","4,4","5,4",
+    "2,5","4,5","5,5",
+    "1,6","2,6","3,6","4,6","5,6",
+    "1,7","2,7","3,7","4,7","5,7",
+    "3,8","4,8","5,8"
+  ]),
+  // specials (initially hidden; revealed every 2 solved)
+  specials: [
+    {x:0,y:1, key:"정"},
+    {x:0,y:7, key:"결"},
+    {x:2,y:8, key:"한"},
+    {x:4,y:2, key:"마"},
+    {x:5,y:2, key:"음"},
+  ],
+  // display numbers (top-left small)
+  numbers: {
+    "0,0": "1",
+    "0,1": "2",
+    "1,1": "3",
+    "1,4": "4",
+    "0,5": "5,6",
+    "0,8": "7",
+    "3,2": "8,9",
+    "5,1": "10"
+  },
+  // clue definitions
+  clues: [
+    {id:"down1",  dir:"down",  label:"세로1", number:1,  clue:"하나님은 모든일을 공평하고 바르게 하시는 OO하신 분이에요 (에스겔 45:10)", answer:"공정", start:{x:0,y:0}},
+    {id:"across2",dir:"across",label:"가로2", number:2,  clue:"약속의 땅을 미리 살피려고 보낸 사람들 이에요 (여호수아 2:1)", answer:"정탐꾼", start:{x:0,y:1}},
+    {id:"down3",  dir:"down",  label:"세로3", number:3,  clue:"십계명 중 가장 마지막 계명. 네 이웃의 집을 OOO OO (출애굽기 20:17)", answer:"탐내지말라", start:{x:1,y:1}},
+    {id:"across4",dir:"across",label:"가로4", number:4,  clue:"구약 성경의 가장 마지막 권 이름은?", answer:"말라기", start:{x:1,y:4}},
+    {id:"across5",dir:"across",label:"가로5", number:5,  clue:"아브라함의 아내. 이삭이 어머니 (창세기 17:19)", answer:"사라", start:{x:0,y:5}},
+    {id:"down6",  dir:"down",  label:"세로6", number:6,  clue:"힘들어도 포기하지 않고 끝까지 싸우는 마음. 우리는 마귀와 OOOO 싸워야 해요", answer:"사생결단", start:{x:0,y:5}},
+    {id:"across7",dir:"across",label:"가로7", number:7,  clue:"우리 하나님은 우리를 위하여 OOO 반석에서 물이 나오게 하셔요! (신명기 8:15)", answer:"단단한", start:{x:0,y:8}},
+    {id:"down8",  dir:"down",  label:"세로8", number:8,  clue:"아침해가 뜨기전 하나님께 드리는 기도에요", answer:"새벽기도", start:{x:3,y:2}},
+    {id:"across9",dir:"across",label:"가로9", number:9,  clue:"하나님께 로그인 할때 우리에게 새 영과 OOO을 주세요 (에스겔 36:26)", answer:"새마음", start:{x:3,y:2}},
+    {id:"down10", dir:"down",  label:"세로10",number:10, clue:"우리 예수님은 OO을 이기시고 부활 하셨어요!", answer:"죽음", start:{x:5,y:1}},
+  ],
+  // order for final message display (정결한 마음)
+  messageOrder: [
+    {x:0,y:1},{x:0,y:7},{x:2,y:8},{x:4,y:2},{x:5,y:2}
+  ]
+};
+
+// --- State ---
+const state = {
+  filled: new Map(),             // "x,y" -> char
+  locked: new Set(),             // "x,y" that are filled by correct answers
+  solved: new Set(),             // clue ids
+  revealedSpecial: new Set(),    // "x,y" specials revealed
+  activeTab: "across",
+  activeClueId: null
+};
+
+// --- Helpers ---
+const key = (x,y)=> `${x},${y}`;
+const isBlock = (x,y)=> PUZZLE.blocks.has(key(x,y));
+const isSpecial = (x,y)=> PUZZLE.specials.some(s => s.x===x && s.y===y);
+const normalize = (s)=> (s||"").replace(/\s+/g,"").trim();
+
+function pathCells(clue){
+  const cells = [];
+  let {x,y} = clue.start;
+  for(let i=0;i<clue.answer.length;i++){
+    if(isBlock(x,y)) break;
+    cells.push({x,y});
+    if(clue.dir==="across") x++;
+    else y++;
+  }
+  return cells;
+}
+
+function setToast(msg, kind=""){
+  const t = document.getElementById("toast");
+  t.className = "toast show" + (kind?(" "+kind):"");
+  t.textContent = msg;
+  clearTimeout(window.__toastTimer);
+  window.__toastTimer = setTimeout(()=> t.className="toast", 1200);
+}
+
+function updateMeta(){
+  const solved = state.solved.size;
+  const revealed = state.revealedSpecial.size;
+  document.getElementById("meta").textContent = `정답 ${solved} / ${PUZZLE.clues.length} · 노란칸 ${revealed} / ${PUZZLE.specials.length}`;
+}
+
+function revealRandomSpecial(){
+  const candidates = PUZZLE.specials
+    .map(s=> key(s.x,s.y))
+    .filter(k=> !state.revealedSpecial.has(k));
+  if(candidates.length===0) return;
+  const k = candidates[Math.floor(Math.random()*candidates.length)];
+  state.revealedSpecial.add(k);
+  renderBoard(); // update colors
+  setToast("노란칸 1개가 공개됐어요!", "ok");
+  updateMeta();
+}
+
+function maybeRevealAfterSolve(){
+  // every 2 solved -> reveal 1
+  const should = Math.floor(state.solved.size / 2);
+  while(state.revealedSpecial.size < should && state.revealedSpecial.size < PUZZLE.specials.length){
+    revealRandomSpecial();
+  }
+}
+
+function renderBoard(){
+  const board = document.getElementById("board");
+  board.innerHTML = "";
+  for(let y=0;y<PUZZLE.height;y++){
+    for(let x=0;x<PUZZLE.width;x++){
+      const k = key(x,y);
+      const div = document.createElement("div");
+      div.className = "cell";
+      if(isBlock(x,y)) div.classList.add("block");
+
+      if(state.revealedSpecial.has(k)) div.classList.add("revealedSpecial");
+      if(state.locked.has(k)) div.classList.add("locked");
+
+      // number
+      const num = PUZZLE.numbers[k];
+      if(num){
+        const n = document.createElement("div");
+        n.className = "num";
+        n.textContent = num;
+        div.appendChild(n);
+      }
+
+      // character
+      const ch = document.createElement("div");
+      ch.className = "ch";
+      ch.textContent = state.filled.get(k) || "";
+      div.appendChild(ch);
+
+      board.appendChild(div);
+    }
+  }
+}
+
+function renderClueList(){
+  const list = document.getElementById("clueList");
+  list.innerHTML = "";
+  const clues = PUZZLE.clues.filter(c => c.dir === state.activeTab);
+  for(const c of clues){
+    const btn = document.createElement("button");
+    btn.className = "clueBtn" + (state.solved.has(c.id) ? " solved" : "");
+    btn.type = "button";
+    btn.addEventListener("click", ()=> openClue(c.id));
+
+    const left = document.createElement("div");
+    left.className = "left";
+
+    const badge = document.createElement("div");
+    badge.className = "badge";
+    badge.textContent = c.label;
+
+    const text = document.createElement("div");
+    text.className = "clueText";
+    text.textContent = c.clue;
+
+    left.appendChild(badge);
+    left.appendChild(text);
+
+    const right = document.createElement("div");
+    right.className = "meta";
+    right.style.paddingTop = "2px";
+    right.textContent = state.solved.has(c.id) ? "✅ 완료" : `(${c.answer.length}글자)`;
+
+    btn.appendChild(left);
+    btn.appendChild(right);
+    list.appendChild(btn);
+  }
+}
+
+function setActiveTab(tab){
+  state.activeTab = tab;
+  document.querySelectorAll(".tabBtn").forEach(b=>{
+    b.classList.toggle("active", b.dataset.tab===tab);
+  });
+  renderClueList();
+}
+
+function openClue(clueId){
+  const clue = PUZZLE.clues.find(c=>c.id===clueId);
+  if(!clue) return;
+
+  state.activeClueId = clueId;
+
+  const back = document.getElementById("modalBackdrop");
+  back.classList.add("open");
+  document.getElementById("modalTitle").textContent = `${clue.label} 입력`;
+  document.getElementById("modalMeta").textContent = clue.dir==="across" ? "가로" : "세로";
+  document.getElementById("modalClue").textContent = clue.clue;
+
+  const input = document.getElementById("answerInput");
+  input.value = "";
+  input.disabled = state.solved.has(clue.id);
+  input.placeholder = state.solved.has(clue.id) ? "이미 정답 처리된 문항입니다." : "정답 입력";
+  input.focus();
+}
+
+function closeClue(){
+  const back = document.getElementById("modalBackdrop");
+  back.classList.remove("open");
+  state.activeClueId = null;
+}
+
+function applyAnswer(clue){
+  const cells = pathCells(clue);
+  const chars = [...clue.answer];
+  for(let i=0;i<cells.length;i++){
+    const {x,y} = cells[i];
+    const k = key(x,y);
+    state.filled.set(k, chars[i]);
+    state.locked.add(k);
+  }
+}
+
+function checkActiveAnswer(){
+  const clue = PUZZLE.clues.find(c=>c.id===state.activeClueId);
+  if(!clue) return;
+
+  if(state.solved.has(clue.id)){
+    setToast("이미 맞춘 문제예요.", "");
+    return;
+  }
+
+  const input = document.getElementById("answerInput").value;
+  if(normalize(input) === normalize(clue.answer)){
+    state.solved.add(clue.id);
+    applyAnswer(clue);
+    renderBoard();
+    renderClueList();
+    updateMeta();
+    setToast("정답이에요! 🎉", "ok");
+    closeClue();
+    maybeRevealAfterSolve();
+    updateMeta();
+
+    if(state.solved.size === PUZZLE.clues.length){
+      setToast("모든 문제 완료! 👏", "ok");
+    }
+  }else{
+    setToast("오답입니다. 다시 시도해요!", "bad");
+    // shake input lightly
+    const el = document.getElementById("answerInput");
+    el.animate([
+      { transform: "translateX(0px)" },
+      { transform: "translateX(-6px)" },
+      { transform: "translateX(6px)" },
+      { transform: "translateX(0px)" }
+    ], { duration: 220, iterations: 1 });
+  }
+}
+
+function resetAll(){
+  try{ localStorage.removeItem("crossword_state_v1"); }catch(e){}
+
+  state.filled.clear();
+  state.locked.clear();
+  state.solved.clear();
+  state.revealedSpecial.clear();
+  state.activeClueId = null;
+  renderBoard();
+  renderClueList();
+  updateMeta();
+  setToast("리셋 완료", "");
+}
+
+// --- Init ---
+function init(){
+  // 항상 새로 시작 (이전 저장 데이터가 있으면 삭제)
+  try{ localStorage.removeItem("crossword_state_v1"); }catch(e){}
+  renderBoard();
+  renderClueList();
+  updateMeta();
+
+  document.querySelectorAll(".tabBtn").forEach(b=>{
+    b.addEventListener("click", ()=> setActiveTab(b.dataset.tab));
+  });
+
+  document.getElementById("closeBtn").addEventListener("click", closeClue);
+  document.getElementById("modalBackdrop").addEventListener("click", (e)=>{
+    if(e.target.id==="modalBackdrop") closeClue();
+  });
+  document.getElementById("checkBtn").addEventListener("click", checkActiveAnswer);
+  document.getElementById("answerInput").addEventListener("keydown", (e)=>{
+    if(e.key==="Enter") checkActiveAnswer();
+    if(e.key==="Escape") closeClue();
+  });
+  document.getElementById("resetBtn").addEventListener("click", resetAll);
+
+}
+
+function saveState(){
+  const data = {
+    filled: Array.from(state.filled.entries()),
+    locked: Array.from(state.locked.values()),
+    solved: Array.from(state.solved.values()),
+    revealedSpecial: Array.from(state.revealedSpecial.values()),
+    activeTab: state.activeTab
+  };
+  localStorage.setItem("crossword_state_v1", JSON.stringify(data));
+}
+function loadState(){
+  try{
+    const raw = localStorage.getItem("crossword_state_v1");
+    if(!raw) return;
+    const data = JSON.parse(raw);
+    state.filled = new Map(data.filled || []);
+    state.locked = new Set(data.locked || []);
+    state.solved = new Set(data.solved || []);
+    state.revealedSpecial = new Set(data.revealedSpecial || []);
+    state.activeTab = data.activeTab || "across";
+    setActiveTab(state.activeTab);
+    renderBoard();
+    renderClueList();
+    updateMeta();
+  }catch(e){}
+}
+
+init();
+</script>
+</body>
+</html>
