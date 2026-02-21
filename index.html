@@ -6,7 +6,7 @@
   <title>가로세로 퍼즐</title>
   <style>
     :root{
-      --cell: 48px;
+      --cell: clamp(34px, 6.2vw, 52px);
       --gap: 2px;
       --border: #111;
       --bg: #0b0b0b;
@@ -25,7 +25,7 @@
       color:#111;
     }
     header{
-      padding: 14px 16px;
+      padding: 10px 12px;
       background: white;
       border-bottom: 1px solid #e6e8ee;
       display:flex;
@@ -47,24 +47,27 @@
       grid-template-columns: 1fr;
       gap: 12px;
       padding: 12px;
-      max-width: 1100px;
+      max-width: 1200px;
       margin: 0 auto;
+      min-height: calc(100vh - 64px);
     }
-    @media (min-width: 860px){
+    /* 태블릿 이상: 퍼즐(좌) + 문제(우) 한 화면 */
+    @media (min-width: 720px){
       main{
         grid-template-columns: auto 1fr;
-        align-items:start;
+        align-items: start;
       }
     }
     .boardWrap{
       background: white;
       border: 1px solid #e6e8ee;
       border-radius: 14px;
-      padding: 12px;
+      padding: 10px;
       box-shadow: 0 1px 8px rgba(20,20,30,.06);
       width: fit-content;
       max-width: 100%;
-      overflow:auto;
+      max-height: calc(100vh - 88px);
+      overflow: auto;
     }
     .board{
       display:grid;
@@ -114,8 +117,10 @@
       background:white;
       border: 1px solid #e6e8ee;
       border-radius: 14px;
-      padding: 12px;
+      padding: 10px;
       box-shadow: 0 1px 8px rgba(20,20,30,.06);
+      max-height: calc(100vh - 88px);
+      overflow: auto;
     }
     .tabs{
       display:flex;
