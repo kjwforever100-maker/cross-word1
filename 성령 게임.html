@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>하나님 인증</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body {
+      background: linear-gradient(to bottom, #bae6fd, #e0f2fe);
+      font-family: 'Noto Sans KR', system-ui, sans-serif;
+    }
+    .snow {
+      position: absolute;
+      top: 0; left: 0; width: 100%; height: 100%;
+      pointer-events: none;
+      overflow: hidden;
+      z-index: 1;
+    }
+    .snowflake {
+      position: absolute;
+      color: white;
+      font-size: 20px;
+      animation: fall linear infinite;
+    }
+    @keyframes fall {
+      to { transform: translateY(100vh); }
+    }
+  </style>
+</head>
+<body class="min-h-screen flex items-center justify-center relative">
+
+  <!-- 눈 내리는 효과 (항상 켜짐) -->
+  <div class="snow" id="snow"></div>
+
+  <!-- ★★★ 1단계: 처음 심플 화면 ★★★ -->
+  <div id="introScreen" 
+       class="bg-white rounded-3xl shadow-2xl max-w-md w-full mx-4 p-10 relative z-10 text-center max-h-[90vh] overflow-y-auto">
+    <div class="text-7xl mb-6">🙏</div>
+    <h1 class="text-3xl font-bold text-blue-700 mb-8">하나님 인증</h1>
+    
+    <div onclick="toggleBelieveIntro()" id="believeEmojiIntro"
+         class="text-8xl cursor-pointer hover:scale-125 transition-transform mb-6">🙏</div>
+    
+    <label class="flex items-center justify-center gap-4 cursor-pointer select-none mb-10">
+      <input type="checkbox" id="believeCheckIntro" 
+             onchange="checkIntroCondition()" 
+             class="w-8 h-8 accent-green-600 cursor-pointer">
+      <span class="text-2xl font-bold text-blue-800">당신은 하나님을 믿는 사람입니까?</span>
+    </label>
+
+    <button id="introConfirmBtn" 
+            onclick="startGame()"
+            class="hidden w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold text-2xl py-5 rounded-2xl shadow-lg transition-all">
+      ✅ 확인하고 들어가기
+    </button>
+  </div>
+
+  <!-- ★★★ 2단계: 본 게임 화면 ★★★ -->
+  <div id="mainScreen" 
+       class="hidden bg-white rounded-3xl shadow-2xl max-w-lg w-full mx-4 p-8 relative z-10 max-h-[90vh] overflow-y-auto">
+
+    <div class="text-center mb-6">
+      <div class="text-6xl mb-2">🌍🙏</div>
+      <h1 class="text-3xl font-bold text-blue-700">창세기 1장 인증</h1>
+    </div>
+
+    <div class="text-center mb-6">
+      <p class="text-gray-600 text-lg font-medium">창세기 1장에 나오는 하나님의 창조물에 모두 체크하세요</p>
+    </div>
+
+    <!-- 체크할 항목들 -->
+    <div id="grid" class="grid grid-cols-4 gap-4 mb-8"></div>
+
+    <!-- 확인 버튼 -->
+    <button id="confirmBtn" 
+            class="hidden w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold text-xl py-4 rounded-2xl shadow-lg transition-all">
+      ✅ 확인하기
+    </button>
+
+    <!-- 성공 화면 -->
+    <div id="successScreen" class="hidden text-center py-8">
+      <div class="text-8xl mb-4 animate-bounce">🎉🙌</div>
+      <h2 class="text-4xl font-bold text-green-600 mb-2">인증 성공!</h2>
+      <p class="text-2xl text-green-700">하나님의 자녀입니다! ✨</p>
+      <p class="mt-4 text-blue-600 font-medium text-lg">"하나님이 지으신 그 모든 것을 보시니<br>보시기에 심히 좋았더라"<br>(창세기 1:31)</p>
+      
+      <div class="mt-8 p-6 bg-gradient-to-r from-purple-100 to-pink-100 rounded-3xl border-4 border-purple-300">
+        <p class="text-3xl font-bold text-purple-700">🔑 패스워드는</p>
+        <p class="text-5xl font-extrabold text-red-600 mt-2 tracking-widest">'피하리라'</p>
+        <p class="text-purple-600 mt-3">이제 다음 활동으로 GO! 🔥</p>
+      </div>
+
+      <button onclick="location.reload()" 
+              class="mt-10 bg-orange-500 hover:bg-orange-600 text-white font-bold py-3 px-10 rounded-2xl text-lg">
+        다시 하기 ❄️
+      </button>
+    </div>
+  </div>
+
+  <script>
+    // 창세기 1장 아이템
+    let items = [
+      { emoji: "🌟", text: "빛", good: true },
+      { emoji: "☁️", text: "구름", good: true },
+      { emoji: "🌍", text: "땅", good: true },
+      { emoji: "🌊", text: "바다", good: true },
+      { emoji: "🌱", text: "풀", good: true },
+      { emoji: "☀️", text: "해", good: true },
+      { emoji: "🌕", text: "달", good: true },
+      { emoji: "⭐", text: "별", good: true },
+      { emoji: "🐦", text: "새", good: true },
+      { emoji: "🐟", text: "물고기", good: true },
+      { emoji: "🐑", text: "동물", good: true },
+
+      { emoji: "😈", text: "마귀", good: false },
+      { emoji: "👹", text: "괴물", good: false },
+      { emoji: "🍎", text: "선악과", good: false },
+      { emoji: "🖤", text: "죄", good: false }
+    ];
+
+    function shuffle(array) {
+      return array.sort(() => Math.random() - 0.5);
+    }
+
+    function renderGrid() {
+      const grid = document.getElementById('grid');
+      grid.innerHTML = '';
+      const shuffled = shuffle([...items]);
+
+      shuffled.forEach(item => {
+        const div = document.createElement('div');
+        div.className = `flex flex-col items-center p-3 bg-white border-2 border-gray-200 rounded-2xl hover:border-blue-300 transition-all cursor-pointer`;
+        div.innerHTML = `
+          <div class="text-5xl mb-2">${item.emoji}</div>
+          <div class="text-sm font-medium text-center">${item.text}</div>
+          <input type="checkbox" 
+                 data-good="${item.good}"
+                 class="mt-3 w-6 h-6 accent-blue-600 cursor-pointer">
+        `;
+        grid.appendChild(div);
+      });
+
+      document.querySelectorAll('#grid input[type="checkbox"]').forEach(cb => {
+        cb.addEventListener('change', checkMainCondition);
+      });
+    }
+
+    // 1단계: 처음 화면 조건 체크
+    function toggleBelieveIntro() {
+      const cb = document.getElementById('believeCheckIntro');
+      cb.checked = !cb.checked;
+      checkIntroCondition();
+    }
+
+    function checkIntroCondition() {
+      const checked = document.getElementById('believeCheckIntro').checked;
+      document.getElementById('introConfirmBtn').classList.toggle('hidden', !checked);
+    }
+
+    // 1단계 확인 → 2단계로 이동
+    function startGame() {
+      document.getElementById('introScreen').classList.add('hidden');
+      document.getElementById('mainScreen').classList.remove('hidden');
+      renderGrid();           // 그리드 그리기
+      createSnow();           // 눈 시작
+    }
+
+    // 2단계: 본 게임 조건 체크
+    function checkMainCondition() {
+      const checkboxes = document.querySelectorAll('#grid input[type="checkbox"]');
+      let allGoodChecked = true;
+      let anyBadChecked = false;
+
+      checkboxes.forEach(cb => {
+        const isGood = cb.dataset.good === 'true';
+        if (isGood && !cb.checked) allGoodChecked = false;
+        if (!isGood && cb.checked) anyBadChecked = true;
+      });
+
+      const btn = document.getElementById('confirmBtn');
+      btn.classList.toggle('hidden', !(allGoodChecked && !anyBadChecked));
+    }
+
+    document.getElementById('confirmBtn').addEventListener('click', () => {
+      document.getElementById('grid').classList.add('hidden');
+      document.getElementById('confirmBtn').classList.add('hidden');
+      document.getElementById('successScreen').classList.remove('hidden');
+    });
+
+    // 눈 내리는 효과
+    function createSnow() {
+      const snowContainer = document.getElementById('snow');
+      for (let i = 0; i < 80; i++) {
+        const flake = document.createElement('div');
+        flake.className = 'snowflake';
+        flake.textContent = ['❄️', '❅', '❆'][Math.floor(Math.random()*3)];
+        flake.style.left = Math.random() * 100 + 'vw';
+        flake.style.animationDuration = Math.random() * 5 + 8 + 's';
+        flake.style.opacity = Math.random() * 0.7 + 0.3;
+        flake.style.fontSize = Math.random() * 15 + 15 + 'px';
+        snowContainer.appendChild(flake);
+        setTimeout(() => flake.remove(), 20000);
+      }
+    }
+    setInterval(createSnow, 8000);
+
+    // 시작은 1단계부터!
+  </script>
+</body>
+</html>
